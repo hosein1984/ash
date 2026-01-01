@@ -28,6 +28,8 @@ World :: struct {
 	command_arena:    mem.Dynamic_Arena, // Owns component data copies
 	pending_commands: [dynamic]Command,
 
+	// Resources
+	resources:        map[typeid]rawptr,
 
 	// Lock
 	lock_count:       int,
@@ -52,9 +54,10 @@ world_init :: proc(world: ^World, allocator := context.allocator) {
 
 	world.queries = make(map[u64]Query, allocator)
 
-	// TODO: maybe we should use a dynamic arena instead? We don't know the buffer size
 	mem.dynamic_arena_init(&world.command_arena, allocator, allocator)
 	world.pending_commands = make([dynamic]Command, allocator)
+
+	world.resources = make(map[typeid]rawptr, allocator)
 
 	world.lock_count = 0
 
@@ -63,7 +66,7 @@ world_init :: proc(world: ^World, allocator := context.allocator) {
 
 // Destroy world and all its resources
 world_destroy :: proc(world: ^World) {
-	delete(world.arch_index)
+	delete(world.resources)
 
 	delete(world.pending_commands)
 	mem.dynamic_arena_destroy(&world.command_arena)
@@ -72,6 +75,8 @@ world_destroy :: proc(world: ^World) {
 		query_destroy(&q)
 	}
 	delete(world.queries)
+
+	delete(world.arch_index)
 
 	for &arch in world.archetypes {
 		archetype_destroy(&arch)
@@ -536,4 +541,33 @@ world_has_pending :: proc(world: ^World) -> bool {
 // Get pending command count.
 world_pending_count :: proc(world: ^World) -> int {
 	return len(world.pending_commands)
+}
+
+// ============================================================================
+// RESOURCE MANAGEMENT
+// ============================================================================
+
+// Add/replace a resource. Caller owns the memory.
+world_set_resource :: proc(world: ^World, resource: ^$T) {
+	world.resources[T] = resource
+}
+
+// Get resource by type. Returns nil if not found.
+world_get_resource :: proc(world: ^World, $T: typeid) -> ^T {
+	resource, ok := world.resources[T]
+	if !ok {
+		return nil
+	}
+	return transmute(^T)resource
+}
+
+// Check if resource exists
+world_has_resource :: proc(world: ^World, $T: typeid) -> bool {
+	_, ok := world.resources[T]
+	return ok
+}
+
+// Remove a resource (does not free memory)
+world_remove_resource :: proc(world: ^World, $T: typeid) {
+	delete_key(&world.resources, T)
 }
