@@ -51,9 +51,9 @@ test_entry_add_components :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{1, 2})
-	ash.entry_add(&entry, Velocity{3, 4})
-	ash.entry_add(&entry, Health{100})
+	ash.entry_set(&entry, Position{1, 2})
+	ash.entry_set(&entry, Velocity{3, 4})
+	ash.entry_set(&entry, Health{100})
 
 	testing.expect(t, ash.entry_has(entry, Position), "Entry should have Position")
 	testing.expect(t, ash.entry_has(entry, Velocity), "Entry should have Velocity")
@@ -79,8 +79,8 @@ test_entry_add_overwrites_existing :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{1, 1})
-	ash.entry_add(&entry, Position{99, 99}) // Overwrite
+	ash.entry_set(&entry, Position{1, 1})
+	ash.entry_set(&entry, Position{99, 99}) // Overwrite
 
 	pos := ash.entry_get(entry, Position)
 	testing.expect_value(t, pos^, Position{99, 99})
@@ -104,8 +104,8 @@ test_entry_add_zero_size_component :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Tag{})
-	ash.entry_add(&entry, Position{5, 5})
+	ash.entry_set(&entry, Tag{})
+	ash.entry_set(&entry, Position{5, 5})
 
 	testing.expect(t, ash.entry_has(entry, Tag), "Should have Tag")
 	testing.expect(t, ash.entry_has(entry, Position), "Should have Position")
@@ -120,7 +120,7 @@ test_entry_add_auto_registers_component :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{1, 2})
+	ash.entry_set(&entry, Position{1, 2})
 
 	testing.expect(t, ash.entry_has(entry, Position), "Should have Position")
 
@@ -145,7 +145,7 @@ test_entry_get_nonexistent :: proc(t: ^testing.T) {
 	testing.expect(t, pos == nil, "Should return nil for missing component")
 
 	// Position but not velocity
-	ash.entry_add(&entry, Position{1, 2})
+	ash.entry_set(&entry, Position{1, 2})
 	pos = ash.entry_get(entry, Position)
 	testing.expect(t, pos != nil, "Should return value for valid component")
 
@@ -164,7 +164,7 @@ test_get_modify_component :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{1, 2})
+	ash.entry_set(&entry, Position{1, 2})
 
 	// Modify through pointer
 	pos := ash.entry_get(entry, Position)
@@ -192,7 +192,7 @@ test_entry_has :: proc(t: ^testing.T) {
 	testing.expect(t, !ash.entry_has(entry, Position), "Should not have Position")
 	testing.expect(t, !ash.entry_has(entry, Velocity), "Should not have Velocity")
 
-	ash.entry_add(&entry, Position{0, 0})
+	ash.entry_set(&entry, Position{0, 0})
 
 	testing.expect(t, ash.entry_has(entry, Position), "Should have Position")
 	testing.expect(t, !ash.entry_has(entry, Velocity), "Should not have Velocity")
@@ -210,8 +210,8 @@ test_entry_remove_component :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{1, 2})
-	ash.entry_add(&entry, Velocity{3, 4})
+	ash.entry_set(&entry, Position{1, 2})
+	ash.entry_set(&entry, Velocity{3, 4})
 
 	ash.entry_remove(&entry, Position)
 
@@ -234,7 +234,7 @@ test_entry_remove_nonexistent :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{1, 2})
+	ash.entry_set(&entry, Position{1, 2})
 
 	// Remove component entitiy doesn't have - should be no-op
 	ash.entry_remove(&entry, Velocity)
@@ -254,7 +254,7 @@ test_entry_remove_last_component :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{1, 2})
+	ash.entry_set(&entry, Position{1, 2})
 	ash.entry_remove(&entry, Position)
 
 	testing.expect(t, !ash.entry_has(entry, Position), "Should not have Position")
@@ -279,8 +279,8 @@ test_entry_remove_zero_size_component :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Tag{})
-	ash.entry_add(&entry, Position{})
+	ash.entry_set(&entry, Tag{})
+	ash.entry_set(&entry, Position{})
 
 	ash.entry_remove(&entry, Tag)
 
@@ -303,8 +303,8 @@ test_entry_archetype_sharing :: proc(t: ^testing.T) {
 	entry2 := ash.world_entry(&world, e2)
 
 	// Both get same component - should share archetype
-	ash.entry_add(&entry1, Position{1, 1})
-	ash.entry_add(&entry2, Position{2, 2})
+	ash.entry_set(&entry1, Position{1, 1})
+	ash.entry_set(&entry2, Position{2, 2})
 
 	arch1 := ash.entry_archetype(entry1)
 	arch2 := ash.entry_archetype(entry2)
@@ -329,11 +329,11 @@ test_entry_archetype_divergence :: proc(t: ^testing.T) {
 	entry2 := ash.world_entry(&world, e2)
 
 	// Both start with Position
-	ash.entry_add(&entry1, Position{1, 1})
-	ash.entry_add(&entry2, Position{2, 2})
+	ash.entry_set(&entry1, Position{1, 1})
+	ash.entry_set(&entry2, Position{2, 2})
 
 	// e1 gets Velocity, e2 doesn't
-	ash.entry_add(&entry1, Velocity{3, 3})
+	ash.entry_set(&entry1, Velocity{3, 3})
 
 	// Refresh entries atfer archetype change (just for sanity not really needed)
 	entry1 = ash.world_entry(&world, e1)
@@ -359,8 +359,8 @@ test_entry_component_preserved_after_add :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{42, 43})
-	ash.entry_add(&entry, Velocity{1, 2}) // Moves to new archetype
+	ash.entry_set(&entry, Position{42, 43})
+	ash.entry_set(&entry, Velocity{1, 2}) // Moves to new archetype
 
 	pos := ash.entry_get(entry, Position)
 	testing.expect_value(t, pos^, Position{42, 43})
@@ -379,9 +379,9 @@ test_entry_component_preserved_after_remove :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{1, 2})
-	ash.entry_add(&entry, Velocity{1, 2})
-	ash.entry_add(&entry, Health{100})
+	ash.entry_set(&entry, Position{1, 2})
+	ash.entry_set(&entry, Velocity{1, 2})
+	ash.entry_set(&entry, Health{100})
 
 	// Remove velocity - should preserve Position and Health
 	ash.entry_remove(&entry, Velocity)
@@ -409,13 +409,13 @@ test_entry_multiple_entities_complex :: proc(t: ^testing.T) {
 		entities[i] = ash.world_spawn(&world)
 		entry := ash.world_entry(&world, entities[i])
 
-		ash.entry_add(&entry, Position{f32(i), f32(i * 2)})
+		ash.entry_set(&entry, Position{f32(i), f32(i * 2)})
 
 		if i % 2 == 0 {
-			ash.entry_add(&entry, Velocity{f32(i), 0})
+			ash.entry_set(&entry, Velocity{f32(i), 0})
 		}
 		if i % 3 == 0 {
-			ash.entry_add(&entry, Health{i32(i * 10)})
+			ash.entry_set(&entry, Health{i32(i * 10)})
 		}
 	}
 
@@ -448,9 +448,9 @@ test_entry_despawn_middle_entity :: proc(t: ^testing.T) {
 	entry2, _ := ash.world_entry(&world, e2)
 	entry3, _ := ash.world_entry(&world, e3)
 
-	ash.entry_add(&entry1, Position{1, 1})
-	ash.entry_add(&entry2, Position{2, 2})
-	ash.entry_add(&entry3, Position{3, 3})
+	ash.entry_set(&entry1, Position{1, 1})
+	ash.entry_set(&entry2, Position{2, 2})
+	ash.entry_set(&entry3, Position{3, 3})
 
 	// Despawn middle entity
 	ash.world_despawn(&world, e2)
@@ -481,8 +481,8 @@ test_entry_rapid_add_remove :: proc(t: ^testing.T) {
 	for i in 0 ..< 1000 {
 		entry := ash.world_entry(&world, e)
 
-		ash.entry_add(&entry, Position{f32(i), f32(i)})
-		ash.entry_add(&entry, Velocity{f32(i), f32(i)})
+		ash.entry_set(&entry, Position{f32(i), f32(i)})
+		ash.entry_set(&entry, Velocity{f32(i), f32(i)})
 
 		entry = ash.world_entry(&world, e)
 		ash.entry_remove(&entry, Velocity)
@@ -520,7 +520,7 @@ test_entry_archetype_valid_with_components :: proc(t: ^testing.T) {
 	e := ash.world_spawn(&world)
 	entry := ash.world_entry(&world, e)
 
-	ash.entry_add(&entry, Position{0, 0})
+	ash.entry_set(&entry, Position{0, 0})
 
 	entry = ash.world_entry(&world, e)
 	arch := ash.entry_archetype(entry)

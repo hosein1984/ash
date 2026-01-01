@@ -50,3 +50,7 @@ mask_intersects :: proc(a, b: Component_Mask) -> bool {
 mask_equals :: proc(a, b: Component_Mask) -> bool {
     return a == b
 }
+
+mask_to_u64 :: #force_inline proc "contextless" (mask: Component_Mask) -> u64 {
+    return transmute(u64)mask
+}

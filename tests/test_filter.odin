@@ -4,11 +4,20 @@ import ash ".."
 import "base:runtime"
 import "core:testing"
 
+create_test_archetype :: proc(
+	components: []ash.Component_ID,
+	registry: ^ash.Component_Registry,
+) -> ash.Archetype {
+	arch: ash.Archetype
+	ash.archetype_init(&arch, 0, components, registry, context.temp_allocator)
+	return arch
+}
+
 @(test)
 test_filter_contains_single :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	vel_id := ash.world_register(&world, Velocity)
@@ -26,9 +35,9 @@ test_filter_contains_single :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_contains_multiple :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	vel_id := ash.world_register(&world, Velocity)
@@ -47,9 +56,9 @@ test_filter_contains_multiple :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_contains_empty :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 
@@ -64,9 +73,9 @@ test_filter_contains_empty :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_create_requires_only :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	vel_id := ash.world_register(&world, Velocity)
@@ -80,9 +89,9 @@ test_filter_create_requires_only :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_create_excludes_only :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	poison_id := ash.world_register(&world, Poison)
@@ -100,9 +109,9 @@ test_filter_create_excludes_only :: proc(t: ^testing.T) {
 
 @(test)
 test_create_filter_anyof_only :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	sprite_id := ash.world_register(&world, Sprite)
@@ -124,9 +133,9 @@ test_create_filter_anyof_only :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_create_requires_excludes :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	vel_id := ash.world_register(&world, Velocity)
@@ -145,9 +154,9 @@ test_filter_create_requires_excludes :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_create_multiple_excludes :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	poison_id := ash.world_register(&world, Poison)
@@ -166,9 +175,9 @@ test_filter_create_multiple_excludes :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_create_requires_anyof :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	size_id := ash.world_register(&world, Size)
@@ -193,9 +202,9 @@ test_filter_create_requires_anyof :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_create_combo :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	size_id := ash.world_register(&world, Size)
@@ -225,9 +234,9 @@ test_filter_create_combo :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_create_exact :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	vel_id := ash.world_register(&world, Velocity)
@@ -246,9 +255,9 @@ test_filter_create_exact :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_create_exact_empty :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 
@@ -263,9 +272,9 @@ test_filter_create_exact_empty :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_or_requires :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	a_id := ash.world_register(&world, A)
 	b_id := ash.world_register(&world, B)
@@ -301,9 +310,9 @@ test_filter_or_requires :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_or_requires_excludes :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	a_id := ash.world_register(&world, A)
 	b_id := ash.world_register(&world, B)
@@ -339,9 +348,9 @@ test_filter_or_requires_excludes :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_or_requires_anyof :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	sprite_id := ash.world_register(&world, Sprite)
@@ -377,13 +386,13 @@ test_filter_or_requires_anyof :: proc(t: ^testing.T) {
 
 @(test)
 test_filter_all :: proc(t: ^testing.T) {
-	runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-
-	world := create_test_world()
+	world: ash.World
+	ash.world_init(&world)
+	defer ash.world_destroy(&world)
 
 	pos_id := ash.world_register(&world, Position)
 	vel_id := ash.world_register(&world, Velocity)
-	
+
 	filter := ash.FILTER_ALL
 
 	arch1 := create_test_archetype({pos_id}, &world.registry)

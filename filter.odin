@@ -142,3 +142,28 @@ mask_from_types :: proc(world: ^World, types: []typeid) -> Component_Mask {
 	}
 	return mask
 }
+
+// FNV-1a hash of the filter for caching
+filter_hash :: proc(f: Filter) -> u64 {
+    h: u64 = 14695981039346656037
+    prime: u64 : 1099511628211
+
+    // Hash exact boolean
+    h ~= u64(f.exact)
+    h *= prime
+
+    // Hash clauses
+    for i in 0 ..< int(f.clause_count) {
+        clause := f.clauses[i]
+        
+        h ~= mask_to_u64(clause.requires)
+        h *= prime
+        
+        h ~= mask_to_u64(clause.excludes)
+        h *= prime
+        
+        h ~= mask_to_u64(clause.anyof)
+        h *= prime
+    }
+    return h
+}

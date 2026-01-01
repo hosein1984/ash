@@ -56,15 +56,15 @@ setup_query_2comp :: proc(
 	for _ in 0 ..< (g_ctx.n * 10) {
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Position{})
+		ash.entry_set(&entry, Position{})
 	}
 
 	// Create n entities with Position + Velocity
 	for _ in 0 ..< g_ctx.n {
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Position{})
-		ash.entry_add(&entry, Velocity{1, 1})
+		ash.entry_set(&entry, Position{})
+		ash.entry_set(&entry, Velocity{1, 1})
 	}
 
 	filter := ash.filter_contains(&g_ctx.world, {Position, Velocity})
@@ -148,14 +148,14 @@ setup_query_32arch :: proc(
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
 
-		ash.entry_add(&entry, Position{})
-		ash.entry_add(&entry, Velocity{1, 1})
+		ash.entry_set(&entry, Position{})
+		ash.entry_set(&entry, Velocity{1, 1})
 
-		if i & 1 != 0 {ash.entry_add(&entry, C1{})}
-		if i & 2 != 0 {ash.entry_add(&entry, C2{})}
-		if i & 4 != 0 {ash.entry_add(&entry, C3{})}
-		if i & 8 != 0 {ash.entry_add(&entry, C4{})}
-		if i & 16 != 0 {ash.entry_add(&entry, C5{})}
+		if i & 1 != 0 {ash.entry_set(&entry, C1{})}
+		if i & 2 != 0 {ash.entry_set(&entry, C2{})}
+		if i & 4 != 0 {ash.entry_set(&entry, C3{})}
+		if i & 8 != 0 {ash.entry_set(&entry, C4{})}
+		if i & 16 != 0 {ash.entry_set(&entry, C5{})}
 	}
 
 	filter := ash.filter_contains(&g_ctx.world, {Position, Velocity})
@@ -212,8 +212,8 @@ setup_query_256arch :: proc(
 	for _ in 0 ..< g_ctx.n {
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Position{})
-		ash.entry_add(&entry, Velocity{1, 1})
+		ash.entry_set(&entry, Position{})
+		ash.entry_set(&entry, Velocity{1, 1})
 	}
 
 	// n*4 noise entities across 256 archetypes
@@ -221,16 +221,16 @@ setup_query_256arch :: proc(
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
 
-		ash.entry_add(&entry, Position{})
+		ash.entry_set(&entry, Position{})
 
-		if i & 1 != 0 {ash.entry_add(&entry, C1{})}
-		if i & 2 != 0 {ash.entry_add(&entry, C2{})}
-		if i & 4 != 0 {ash.entry_add(&entry, C3{})}
-		if i & 8 != 0 {ash.entry_add(&entry, C4{})}
-		if i & 16 != 0 {ash.entry_add(&entry, C5{})}
-		if i & 32 != 0 {ash.entry_add(&entry, C6{})}
-		if i & 64 != 0 {ash.entry_add(&entry, C7{})}
-		if i & 128 != 0 {ash.entry_add(&entry, C8{})}
+		if i & 1 != 0 {ash.entry_set(&entry, C1{})}
+		if i & 2 != 0 {ash.entry_set(&entry, C2{})}
+		if i & 4 != 0 {ash.entry_set(&entry, C3{})}
+		if i & 8 != 0 {ash.entry_set(&entry, C4{})}
+		if i & 16 != 0 {ash.entry_set(&entry, C5{})}
+		if i & 32 != 0 {ash.entry_set(&entry, C6{})}
+		if i & 64 != 0 {ash.entry_set(&entry, C7{})}
+		if i & 128 != 0 {ash.entry_set(&entry, C8{})}
 	}
 
 	filter := ash.filter_contains(&g_ctx.world, {Position, Velocity})
@@ -280,8 +280,8 @@ setup_create_2comp :: proc(
 	for _ in 0 ..< g_ctx.n {
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Position{})
-		ash.entry_add(&entry, Velocity{})
+		ash.entry_set(&entry, Position{})
+		ash.entry_set(&entry, Velocity{})
 		append(&g_ctx.entities, e)
 	}
 	for e in g_ctx.entities {ash.world_despawn(&g_ctx.world, e)}
@@ -298,8 +298,8 @@ bench_create_2comp :: proc(
 		for _ in 0 ..< g_ctx.n {
 			e := ash.world_spawn(&g_ctx.world)
 			entry := ash.world_entry(&g_ctx.world, e)
-			ash.entry_add(&entry, Position{})
-			ash.entry_add(&entry, Velocity{})
+			ash.entry_set(&entry, Position{})
+			ash.entry_set(&entry, Velocity{})
 			append(&g_ctx.entities, e)
 		}
 		for e in g_ctx.entities {ash.world_despawn(&g_ctx.world, e)}
@@ -339,8 +339,8 @@ bench_create_2comp_alloc :: proc(
 		for _ in 0 ..< n {
 			e := ash.world_spawn(&world)
 			entry := ash.world_entry(&world, e)
-			ash.entry_add(&entry, Position{})
-			ash.entry_add(&entry, Velocity{})
+			ash.entry_set(&entry, Position{})
+			ash.entry_set(&entry, Velocity{})
 		}
 
 		ash.world_destroy(&world)
@@ -376,7 +376,7 @@ setup_create_10comp :: proc(
 
 	// Warmup
 	for _ in 0 ..< g_ctx.n {
-		e := ash.world_spawn_with(
+		e := ash.world_spawn(
 			&g_ctx.world,
 			C1{},
 			C2{},
@@ -403,7 +403,7 @@ bench_create_10comp :: proc(
 ) -> time.Benchmark_Error {
 	for _ in 0 ..< options.rounds {
 		for _ in 0 ..< g_ctx.n {
-			e := ash.world_spawn_with(
+			e := ash.world_spawn(
 				&g_ctx.world,
 				C1{},
 				C2{},
@@ -447,8 +447,8 @@ setup_delete_2comp :: proc(
 	for _ in 0 ..< total_entities {
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Position{})
-		ash.entry_add(&entry, Velocity{})
+		ash.entry_set(&entry, Position{})
+		ash.entry_set(&entry, Velocity{})
 		append(&g_ctx.entities, e)
 	}
 
@@ -504,16 +504,16 @@ bench_delete_10comp :: proc(
 		for _ in 0 ..< g_ctx.n {
 			e := ash.world_spawn(&g_ctx.world)
 			entry := ash.world_entry(&g_ctx.world, e)
-			ash.entry_add(&entry, C1{})
-			ash.entry_add(&entry, C2{})
-			ash.entry_add(&entry, C3{})
-			ash.entry_add(&entry, C4{})
-			ash.entry_add(&entry, C5{})
-			ash.entry_add(&entry, C6{})
-			ash.entry_add(&entry, C7{})
-			ash.entry_add(&entry, C8{})
-			ash.entry_add(&entry, C9{})
-			ash.entry_add(&entry, C10{})
+			ash.entry_set(&entry, C1{})
+			ash.entry_set(&entry, C2{})
+			ash.entry_set(&entry, C3{})
+			ash.entry_set(&entry, C4{})
+			ash.entry_set(&entry, C5{})
+			ash.entry_set(&entry, C6{})
+			ash.entry_set(&entry, C7{})
+			ash.entry_set(&entry, C8{})
+			ash.entry_set(&entry, C9{})
+			ash.entry_set(&entry, C10{})
 			append(&g_ctx.entities, e)
 		}
 
@@ -547,14 +547,14 @@ setup_add_remove :: proc(
 	for _ in 0 ..< g_ctx.n {
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Position{})
+		ash.entry_set(&entry, Position{})
 		append(&g_ctx.entities, e)
 	}
 
 	// Warmup
 	for e in g_ctx.entities {
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Velocity{})
+		ash.entry_set(&entry, Velocity{})
 	}
 	for e in g_ctx.entities {
 		entry := ash.world_entry(&g_ctx.world, e)
@@ -571,7 +571,7 @@ bench_add_remove :: proc(
 	for _ in 0 ..< options.rounds {
 		for e in g_ctx.entities {
 			entry := ash.world_entry(&g_ctx.world, e)
-			ash.entry_add(&entry, Velocity{})
+			ash.entry_set(&entry, Velocity{})
 		}
 		for e in g_ctx.entities {
 			entry := ash.world_entry(&g_ctx.world, e)
@@ -612,24 +612,24 @@ setup_add_remove_large :: proc(
 	for _ in 0 ..< g_ctx.n {
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Position{})
-		ash.entry_add(&entry, C1{})
-		ash.entry_add(&entry, C2{})
-		ash.entry_add(&entry, C3{})
-		ash.entry_add(&entry, C4{})
-		ash.entry_add(&entry, C5{})
-		ash.entry_add(&entry, C6{})
-		ash.entry_add(&entry, C7{})
-		ash.entry_add(&entry, C8{})
-		ash.entry_add(&entry, C9{})
-		ash.entry_add(&entry, C10{})
+		ash.entry_set(&entry, Position{})
+		ash.entry_set(&entry, C1{})
+		ash.entry_set(&entry, C2{})
+		ash.entry_set(&entry, C3{})
+		ash.entry_set(&entry, C4{})
+		ash.entry_set(&entry, C5{})
+		ash.entry_set(&entry, C6{})
+		ash.entry_set(&entry, C7{})
+		ash.entry_set(&entry, C8{})
+		ash.entry_set(&entry, C9{})
+		ash.entry_set(&entry, C10{})
 		append(&g_ctx.entities, e)
 	}
 
 	// Warmup
 	for e in g_ctx.entities {
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Velocity{})
+		ash.entry_set(&entry, Velocity{})
 	}
 	for e in g_ctx.entities {
 		entry := ash.world_entry(&g_ctx.world, e)
@@ -646,7 +646,7 @@ bench_add_remove_large :: proc(
 	for _ in 0 ..< options.rounds {
 		for e in g_ctx.entities {
 			entry := ash.world_entry(&g_ctx.world, e)
-			ash.entry_add(&entry, Velocity{})
+			ash.entry_set(&entry, Velocity{})
 		}
 		for e in g_ctx.entities {
 			entry := ash.world_entry(&g_ctx.world, e)
@@ -676,7 +676,7 @@ setup_random_access :: proc(
 	for _ in 0 ..< g_ctx.n {
 		e := ash.world_spawn(&g_ctx.world)
 		entry := ash.world_entry(&g_ctx.world, e)
-		ash.entry_add(&entry, Position{})
+		ash.entry_set(&entry, Position{})
 		append(&g_ctx.entities, e)
 	}
 
