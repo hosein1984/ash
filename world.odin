@@ -31,6 +31,9 @@ World :: struct {
 	// Resources
 	resources:        map[typeid]rawptr,
 
+	// Observers/Events
+	observers:        Observers,
+
 	// Lock
 	lock_count:       int,
 }
@@ -59,14 +62,49 @@ world_init :: proc(world: ^World, allocator := context.allocator) {
 
 	world.resources = make(map[typeid]rawptr, allocator)
 
+	observers_init(&world.observers)
+
 	world.lock_count = 0
 
 	next_world_id += 1
 }
 
+// Despawn all entities, firing all observers
+world_clear :: proc(world: ^World) {
+    if world_is_locked(world) {
+        panic("world_clear: Cannot clear world during iteration.")
+    }
+    
+    // Collect all entities (despawning modifies archetypes)
+    entities := make([dynamic]Entity, context.temp_allocator)
+    
+    for &arch in world.archetypes {
+        for row in 0..<archetype_entity_count(&arch) {
+            append(&entities, arch.entities[row])
+        }
+    }
+    
+    // Include component-less entities
+    for &loc, id in world.locations.locations {
+        if loc.valid && loc.archetype == ARCHETYPE_NULL {
+            append(&entities, entity_make(u32(id), loc.version))
+        }
+    }
+    
+    // Despawn each - this fires despawn + remove observers
+    for e in entities {
+        world_despawn(world, e)
+    }
+    
+    // Clear pending commands too
+    world_clear_queue(world)
+}
+
 // Destroy world and all its resources
 world_destroy :: proc(world: ^World) {
 	delete(world.resources)
+
+	observers_destroy(&world.observers)
 
 	delete(world.pending_commands)
 	mem.dynamic_arena_destroy(&world.command_arena)
@@ -111,6 +149,8 @@ world_spawn :: proc(world: ^World, components: ..any) -> Entity {
 			entity_version(entity),
 		)
 
+    	observers_notify_spawn(&world.observers, world, entity)
+
 		return entity
 	}
 
@@ -133,13 +173,6 @@ world_spawn :: proc(world: ^World, components: ..any) -> Entity {
 	arch := world_get_or_create_archetype(world, comp_ids)
 	row := archetype_push_entity(arch, entity)
 
-	for c, i in components {
-		col := archetype_get_column(arch, comp_ids[i])
-		if col != nil {
-			column_set_raw(col, row, c.data)
-		}
-	}
-
 	location_map_insert(
 		&world.locations,
 		entity_id(entity),
@@ -147,6 +180,16 @@ world_spawn :: proc(world: ^World, components: ..any) -> Entity {
 		row,
 		entity_version(entity),
 	)
+
+	for c, i in components {
+		col := archetype_get_column(arch, comp_ids[i])
+		if col != nil {
+			column_set_raw(col, row, c.data)
+		}    
+		observers_notify_insert(&world.observers, world, entity, comp_ids[i])
+	}
+
+	observers_notify_spawn(&world.observers, world, entity)
 
 	return entity
 }
@@ -168,9 +211,16 @@ world_despawn :: proc(world: ^World, entity: Entity) {
 
 	loc := world_get_entity_location(world, entity)
 
+    observers_notify_despawn(&world.observers, world, entity)
+
+
 	// Remove from archetype if entity has components
 	if loc.archetype != ARCHETYPE_NULL {
 		arch := &world.archetypes[loc.archetype]
+
+		for comp_id in arch.layout.components {
+            observers_notify_remove(&world.observers, world, entity, comp_id)
+        }
 
 		moved_entity := archetype_swap_remove(arch, loc.row)
 		if moved_entity != ENTITY_NULL {
@@ -475,6 +525,8 @@ world_flush :: proc(world: ^World) {
 					0,
 					entity_version(cmd.entity),
 				)
+
+				observers_notify_spawn(&world.observers, world, cmd.entity)
 			} else {
 				// Get component IDs and sort them
 				comp_ids := make([]Component_ID, len(cmd.components))
@@ -482,6 +534,7 @@ world_flush :: proc(world: ^World) {
 					comp_ids[i] = c.id
 				}
 				slice.sort(comp_ids)
+				defer delete(comp_ids)
 
 				// Get or create archetype
 				arch := world_get_or_create_archetype(world, comp_ids)
@@ -493,6 +546,7 @@ world_flush :: proc(world: ^World) {
 					if col != nil {
 						column_set_raw(col, row, c.data)
 					}
+					observers_notify_insert(&world.observers, world, cmd.entity, c.id)
 				}
 
 				location_map_insert(
@@ -503,7 +557,7 @@ world_flush :: proc(world: ^World) {
 					entity_version(cmd.entity),
 				)
 
-				delete(comp_ids)
+				observers_notify_spawn(&world.observers, world, cmd.entity)
 			}
 		case .Despawn:
 			world_despawn(world, cmd.entity)
@@ -570,4 +624,36 @@ world_has_resource :: proc(world: ^World, $T: typeid) -> bool {
 // Remove a resource (does not free memory)
 world_remove_resource :: proc(world: ^World, $T: typeid) {
 	delete_key(&world.resources, T)
+}
+
+
+// ============================================================================
+// OBSERVERS
+// ============================================================================
+
+world_on_spawn :: proc(w: ^World, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
+    return observers_on_spawn(&w.observers, callback, user_data)
+}
+
+world_on_despawn :: proc(w: ^World, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
+    return observers_on_despawn(&w.observers, callback, user_data)
+}
+
+world_on_insert :: proc(w: ^World, $T: typeid, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
+    comp_id := registry_register(&w.registry, T)
+    return observers_on_insert(&w.observers, comp_id, callback, user_data)
+}
+
+world_on_set :: proc(w: ^World, $T: typeid, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
+    comp_id := registry_register(&w.registry, T)
+    return observers_on_set(&w.observers, comp_id, callback, user_data)
+}
+
+world_on_remove :: proc(w: ^World, $T: typeid, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
+    comp_id := registry_register(&w.registry, T)
+    return observers_on_remove(&w.observers, comp_id, callback, user_data)
+}
+
+world_unobserve :: proc(w: ^World, handle: Observer_Handle) {
+    observers_unregister(&w.observers, handle)
 }

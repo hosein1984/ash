@@ -18,7 +18,7 @@ test_archetype_init_destroy :: proc(t: ^testing.T) {
 	defer ash.archetype_destroy(&arch)
 
 	testing.expect_value(t, len(arch.columns), 2)
-	testing.expect_value(t, ash.archetype_len(&arch), 0)
+	testing.expect_value(t, ash.archetype_entity_count(&arch), 0)
 	testing.expect(t, ash.archetype_has(&arch, pos_id), "Should have Position")
 	testing.expect(t, ash.archetype_has(&arch, vel_id), "Should have Velocity")
 }
@@ -43,7 +43,7 @@ test_archetype_push_entity :: proc(t: ^testing.T) {
 
 	testing.expect_value(t, row1, 0)
 	testing.expect_value(t, row2, 1)
-	testing.expect_value(t, ash.archetype_len(&arch), 2)
+	testing.expect_value(t, ash.archetype_entity_count(&arch), 2)
 	testing.expect_value(t, arch.entities[0], e1)
 	testing.expect_value(t, arch.entities[1], e2)
 }
@@ -81,7 +81,7 @@ test_archetype_swap_remove :: proc(t: ^testing.T) {
 	moved := ash.archetype_swap_remove(&arch, 1)
 
 	testing.expect_value(t, moved, e3) // e3 was moved to fill the gap
-	testing.expect_value(t, ash.archetype_len(&arch), 2)
+	testing.expect_value(t, ash.archetype_entity_count(&arch), 2)
 	testing.expect_value(t, arch.entities[0], e1)
 	testing.expect_value(t, arch.entities[1], e3)
 
@@ -113,7 +113,7 @@ test_archetype_swap_remove_last :: proc(t: ^testing.T) {
 	moved := ash.archetype_swap_remove(&arch, 1)
 
 	testing.expect_value(t, moved, ash.ENTITY_NULL)
-	testing.expect_value(t, ash.archetype_len(&arch), 1)
+	testing.expect_value(t, ash.archetype_entity_count(&arch), 1)
 	testing.expect_value(t, arch.entities[0], e1)
 }
 
@@ -167,7 +167,7 @@ test_archetype_multiple_component :: proc(t: ^testing.T) {
 		ash.column_set(vel_col, row, &vel)
 	}
 
-	testing.expect_value(t, ash.archetype_len(&arch), 3)
+	testing.expect_value(t, ash.archetype_entity_count(&arch), 3)
 
 	// Verify data
 	positions := ash.column_get_slice(pos_col, Position)
@@ -193,7 +193,7 @@ test_archetype_zero_size_component :: proc(t: ^testing.T) {
 	e := ash.entity_make(1, 0)
 	ash.archetype_push_entity(&arch, e)
 
-	testing.expect_value(t, ash.archetype_len(&arch), 1)
+	testing.expect_value(t, ash.archetype_entity_count(&arch), 1)
 	testing.expect(t, ash.archetype_has(&arch, tag_id), "Should have tag")
 
 	// Tag column exists but has zero size

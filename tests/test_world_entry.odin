@@ -90,7 +90,7 @@ test_entry_add_overwrites_existing :: proc(t: ^testing.T) {
 	testing.expect_value(t, len(world.archetypes), 1)
 
 	arch := ash.entry_archetype(entry)
-	testing.expect_value(t, ash.archetype_len(arch), 1)
+	testing.expect_value(t, ash.archetype_entity_count(arch), 1)
 }
 
 @(test)
@@ -311,7 +311,7 @@ test_entry_archetype_sharing :: proc(t: ^testing.T) {
 	arch2 := ash.entry_archetype(entry2)
 
 	testing.expect(t, arch1 == arch2, "Should share archetype")
-	testing.expect_value(t, ash.archetype_len(arch1), 2)
+	testing.expect_value(t, ash.archetype_entity_count(arch1), 2)
 }
 
 @(test)
@@ -344,8 +344,8 @@ test_entry_archetype_divergence :: proc(t: ^testing.T) {
 	arch2 := ash.entry_archetype(entry2)
 
 	testing.expect(t, arch1 != arch2, "Should be different archetypes")
-	testing.expect_value(t, ash.archetype_len(arch1), 1)
-	testing.expect_value(t, ash.archetype_len(arch2), 1)
+	testing.expect_value(t, ash.archetype_entity_count(arch1), 1)
+	testing.expect_value(t, ash.archetype_entity_count(arch2), 1)
 }
 
 @(test)

@@ -118,7 +118,7 @@ archetype_has :: proc(arch: ^Archetype, id: Component_ID) -> bool {
 }
 
 // Number of entities in archetype
-archetype_len :: proc(arch: ^Archetype) -> int {
+archetype_entity_count :: proc(arch: ^Archetype) -> int {
 	return len(arch.entities)
 }
 

@@ -112,12 +112,12 @@ entry_set :: proc(entry: ^World_Entry, value: $T) {
 			version   = entity_version(entity),
 			valid     = true,
 		}
-
+		observers_notify_insert(&world.observers, world, entity, comp_id)
+		
 	} else if archetype_has(curr_arch, comp_id) {
 		// Already has component - just update value (no move)
 		archetype_set(curr_arch, entry.loc.row, comp_id, &v)
-		// loc unchanged
-
+		observers_notify_set(&world.observers, world, entity, comp_id)
 	} else {
 		// Move to new archetype
 		new_arch: ^Archetype
@@ -146,7 +146,10 @@ entry_set :: proc(entry: ^World_Entry, value: $T) {
 			version   = entity_version(entity),
 			valid     = true,
 		}
+		observers_notify_insert(&world.observers, world, entity, comp_id)
 	}
+
+
 }
 
 // Remove a component from the entity. Moves entity to appropriate archetype.
@@ -180,6 +183,8 @@ entry_remove :: proc(entry: ^World_Entry, $T: typeid) {
 			"  Then call world_flush(&world) after the loop.",
 		)
 	}
+
+    observers_notify_remove(&world.observers, world, entity, comp_id)
 
 	if archetype_component_count(curr_arch) == 1 {
 		// Last component - entity becomes component-less
@@ -274,13 +279,14 @@ entry_set_raw :: proc(entry: ^World_Entry, comp_id: Component_ID, data: rawptr, 
 			valid     = true,
 		}
 
+		observers_notify_insert(&world.observers, world, entity, comp_id)
 	} else if archetype_has(curr_arch, comp_id) {
 		// Already has component - just update
 		col := archetype_get_column(curr_arch, comp_id)
 		if col != nil {
 			column_set_raw(col, entry.loc.row, data)
 		}
-
+		observers_notify_set(&world.observers, world, entity, comp_id)
 	} else {
 		// Move to new archetype
 		new_arch: ^Archetype
@@ -312,6 +318,8 @@ entry_set_raw :: proc(entry: ^World_Entry, comp_id: Component_ID, data: rawptr, 
 			version   = entity_version(entity),
 			valid     = true,
 		}
+
+		observers_notify_insert(&world.observers, world, entity, comp_id)
 	}
 }
 
@@ -333,6 +341,8 @@ entry_remove_by_id :: proc(entry: ^World_Entry, comp_id: Component_ID) {
 	if !archetype_has(curr_arch, comp_id) {
 		return
 	}
+
+	observers_notify_remove(&world.observers, world, entity, comp_id)
 
 	if archetype_component_count(curr_arch) == 1 {
 		// Last component

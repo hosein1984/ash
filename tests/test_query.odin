@@ -185,7 +185,7 @@ test_query_iter_archs :: proc(t: ^testing.T) {
 	it := ash.query_iter_archs(q)
 	for arch in ash.query_next_arch(&it) {
 		arch_count += 1
-		total_entities += ash.archetype_len(arch)
+		total_entities += ash.archetype_entity_count(arch)
 	}
 
 	testing.expect_value(t, arch_count, 2)
