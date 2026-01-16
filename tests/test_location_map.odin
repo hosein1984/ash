@@ -1,7 +1,8 @@
 package tests
 
-import ash ".."
 import "core:testing"
+
+import ".."
 
 @(test)
 test_location_map_basic :: proc(t: ^testing.T) {

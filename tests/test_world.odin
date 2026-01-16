@@ -1,9 +1,8 @@
 package tests
 
-import ash ".."
-import "base:runtime"
-import "core:fmt"
 import "core:testing"
+
+import ".."
 
 @(test)
 test_world_register_component :: proc(t: ^testing.T) {

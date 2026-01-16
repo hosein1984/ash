@@ -1,7 +1,8 @@
 package tests
 
-import ash ".."
 import "core:testing"
+
+import ".."
 
 @(test)
 test_entry_valid_entity :: proc(t: ^testing.T) {

@@ -1,8 +1,9 @@
 package tests
 
-import ash ".."
 import "base:runtime"
 import "core:testing"
+
+import ".."
 
 create_test_archetype :: proc(
 	components: []ash.Component_ID,

@@ -1,7 +1,8 @@
 package tests
 
 import "core:testing"
-import ash ".."
+
+import ".."
 
 @(test)
 test_entity_pack_unpack :: proc(t: ^testing.T) {

@@ -1,8 +1,8 @@
 package tests
 
-import ash ".."
-import "base:runtime"
 import "core:testing"
+
+import ".."
 
 @(test)
 test_query_matches_archetypes :: proc(t: ^testing.T) {

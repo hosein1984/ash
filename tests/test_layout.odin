@@ -1,7 +1,8 @@
 package tests
 
 import "core:testing"
-import ash ".."
+
+import ".."
 
 @(test)
 test_layout_hash_order_independent :: proc(t: ^testing.T) {

@@ -1,7 +1,8 @@
 package tests
 
-import ash ".."
 import "core:testing"
+
+import ".."
 
 @(test)
 test_archetype_init_destroy :: proc(t: ^testing.T) {

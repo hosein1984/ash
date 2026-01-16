@@ -16,6 +16,6 @@ Command_Component :: struct {
 Command :: struct {
 	kind:       Command_Kind,
 	entity:     Entity,
-	component:  Component_ID, // Used in component removal
+	component:  Component_ID,        // Used in component removal
 	components: []Command_Component, // Use when spawning entities or setting components
 }

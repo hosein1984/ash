@@ -1,6 +1,5 @@
 package ash
 
-import "core:fmt"
 import "base:runtime"
 
 // Query with cached archetype matching

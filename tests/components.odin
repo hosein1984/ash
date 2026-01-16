@@ -1,6 +1,6 @@
 package tests
 
-import ash ".."
+import ".."
 
 // odinfmt: disable
 Position :: struct { x, y: f32 }

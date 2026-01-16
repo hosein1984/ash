@@ -1,7 +1,8 @@
 package tests
 
 import "core:testing"
-import ash ".."
+
+import ".."
 
 @(test)
 test_register_component :: proc(t: ^testing.T) {

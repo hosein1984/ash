@@ -1,7 +1,8 @@
 package tests
 
-import ash ".."
 import "core:testing"
+
+import ".."
 
 @(test)
 test_mask_has_add_remove :: proc(t: ^testing.T) {
