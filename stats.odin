@@ -40,9 +40,9 @@ world_stats :: proc(world: ^World, allocator := context.allocator) -> World_Stat
 		arch_mem += len(arch.entities) * size_of(Entity)
 
 		components := make([]typeid, len(arch.layout.components), allocator)
-		for comp_id, i in arch.layout.components {
+		for comp_id, j in arch.layout.components {
 			info, _ := registry_get_info(&world.registry, comp_id)
-			components[i] = info.type_id
+			components[j] = info.type_id
 		}
 
 		stats.archetype_stats[i] = Archetype_Stats {

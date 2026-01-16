@@ -1,7 +1,5 @@
 package ash
 
-import "base:runtime"
-
 // Query with cached archetype matching
 Query :: struct {
 	world:           ^World,

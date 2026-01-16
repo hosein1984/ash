@@ -22,7 +22,7 @@ Observer_Kind :: enum {
 Observer_Location :: struct {
     kind:           Observer_Kind,
     component_id:   Component_ID, // For Insert/Remove observers
-    index:          int
+    index:          int,
 }
 
 Observers :: struct {
@@ -35,7 +35,7 @@ Observers :: struct {
     remove_observers:   map[Component_ID][dynamic]Observer,
 
     next_handle:        Observer_Handle,
-    registry:           map[Observer_Handle]Observer_Location
+    registry:           map[Observer_Handle]Observer_Location,
 }
 
 observers_init :: proc(obs: ^Observers, allocator := context.allocator) {

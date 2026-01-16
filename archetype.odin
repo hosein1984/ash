@@ -1,8 +1,5 @@
 package ash
 
-import "base:runtime"
-import "core:slice"
-
 Archetype_Index :: distinct u32
 
 ARCHETYPE_NULL :: Archetype_Index(max(u32))

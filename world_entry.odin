@@ -5,7 +5,7 @@ World_Entry :: struct {
 	world:  ^World,
 	entity: Entity,
 	loc:    Entity_Location, 	// Cached
-	arch:	^Archetype			// Cached
+	arch:	^Archetype,			// Cached
 }
 
 // Create entry for entity.
