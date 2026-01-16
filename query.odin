@@ -31,8 +31,7 @@ Query_Arch_Iter :: struct {
 
 
 // Create query with filter (automatically cleans up after itself)
-// At the moment I don't see any use case for passing iterators around to auto-cleaning should be fine.
-@(private)
+// At the moment I don't see any use case for passing iterators around, so auto-cleaning should be fine.
 query_create :: proc(world: ^World, filter: Filter, allocator := context.allocator) -> Query {
 	return Query {
 		world = world,
@@ -43,7 +42,6 @@ query_create :: proc(world: ^World, filter: Filter, allocator := context.allocat
 }
 
 // Destroy query and free cache
-@(private)
 query_destroy :: proc(q: ^Query) {
 	delete(q.cached_archs)
 }
@@ -95,25 +93,34 @@ query_iter :: proc(q: ^Query) -> Query_Entry_Iter {
 // WARNING: Using `break` inside `for-in` will leak the lock!
 //
 @(deferred_in = unlock_query_iter)
-query_next :: proc(it: ^Query_Entry_Iter) -> (World_Entry, bool) {
+query_next :: #force_inline proc(it: ^Query_Entry_Iter) -> (World_Entry, bool) {
 	lock_query_iter(it)
 
-	// Skip empty archetypes
 	for it.arch_idx < len(it.query.cached_archs) {
 		arch_index := it.query.cached_archs[it.arch_idx]
-		arch := world_get_archetype(it.query.world, arch_index)
+        arch := world_get_archetype(it.query.world, arch_index)
 
 		if it.entity_idx < len(arch.entities) {
-			entity := arch.entities[it.entity_idx]
-			entry := world_entry(it.query.world, entity)
-			it.entity_idx += 1
-			return entry, true
-		}
+            entity := arch.entities[it.entity_idx]
+            row := it.entity_idx
+            it.entity_idx += 1
+            
+            return World_Entry {
+                world  = it.query.world,
+                entity = entity,
+                loc    = Entity_Location {
+                    archetype   = arch_index,
+                    row         = row,
+                    generation  = entity_generation(entity),
+                    valid       = true,
+                },
+				arch   = arch,
+            }, true
+        }
 
-		// No more entity in archetype. Try next.
-		it.arch_idx += 1
-		it.entity_idx = 0
-	}
+        it.arch_idx += 1
+        it.entity_idx = 0
+    }
 
 	unlock_query_iter(it)
 	return {}, false
@@ -154,7 +161,7 @@ query_iter_archs :: proc(q: ^Query) -> Query_Arch_Iter {
 //   }
 //
 @(deferred_in = unlock_query_arch_iter)
-query_next_arch :: proc(it: ^Query_Arch_Iter) -> (^Archetype, bool) {
+query_next_arch :: #force_inline proc(it: ^Query_Arch_Iter) -> (^Archetype, bool) {
 	lock_query_arch_iter(it)
 
 	if it.arch_idx < len(it.query.cached_archs) {

@@ -8,11 +8,12 @@ Archetype_Index :: distinct u32
 ARCHETYPE_NULL :: Archetype_Index(max(u32))
 
 Archetype :: struct {
-	index:        Archetype_Index,
-	layout:       Entity_Layout,
-	mask:         Component_Mask,
-	entities:     [dynamic]Entity,
-	columns:      []Component_Column,
+	index:        	Archetype_Index,
+	layout:       	Entity_Layout,
+	mask:         	Component_Mask,
+	entities:     	[dynamic]Entity,
+	columns:        []Component_Column,
+	comp_to_column: [MAX_COMPONENTS]int, // comp_id -> column index, -1 if not present
 
 	// Edge cache for o(1) archetype transitions
 	add_edges:    map[Component_ID]Archetype_Index,
@@ -32,9 +33,14 @@ archetype_init :: proc(
 	arch.entities = make([dynamic]Entity, allocator)
 	arch.columns = make([]Component_Column, len(arch.layout.components), allocator)
 
+	for i in 0..<MAX_COMPONENTS {
+		arch.comp_to_column[i] = -1
+	}
+
 	arch.mask = {}
-	for comp_id in arch.layout.components {
+	for comp_id, col_idx in arch.layout.components {
 		mask_add(&arch.mask, comp_id)
+		arch.comp_to_column[comp_id] = col_idx
 	}
 	
 	for comp_id, i in arch.layout.components {
@@ -97,18 +103,16 @@ archetype_swap_remove :: proc(arch: ^Archetype, row: int) -> Entity {
 }
 
 // Get column index for component ID (-1 if not present)
-archetype_column_index :: proc(arch: ^Archetype, id: Component_ID) -> int {
-	idx, found := slice.binary_search(arch.layout.components, id)
-	return found ? idx : -1
+archetype_column_index :: #force_inline proc(arch: ^Archetype, id: Component_ID) -> int {
+	return arch.comp_to_column[id]
 }
 
 // Get column for component ID (nil if not present)
-archetype_get_column :: proc(arch: ^Archetype, id: Component_ID) -> ^Component_Column {
+archetype_get_column :: #force_inline proc(arch: ^Archetype, id: Component_ID) -> ^Component_Column {
 	idx := archetype_column_index(arch, id)
 	if idx == -1 {
 		return nil
 	}
-
 	return &arch.columns[idx]
 }
 

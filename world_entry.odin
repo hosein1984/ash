@@ -4,7 +4,8 @@ package ash
 World_Entry :: struct {
 	world:  ^World,
 	entity: Entity,
-	loc:    Entity_Location,
+	loc:    Entity_Location, 	// Cached
+	arch:	^Archetype			// Cached
 }
 
 // Create entry for entity.
@@ -43,30 +44,47 @@ entry_get :: #force_inline proc(entry: World_Entry, $T: typeid) -> ^T {
 	if !ok {
 		return nil
 	}
-	if entry.loc.archetype == ARCHETYPE_NULL {
+	return entry_get_by_id(entry, T, comp_id)
+}
+
+// Get entity's component. Returns nil if entity doesn't have the component.
+@(require_results)
+entry_get_by_id :: #force_inline proc(entry: World_Entry, $T: typeid, comp_id: Component_ID) -> ^T {
+	arch := entry_archetype(entry)
+	if arch == nil {
 		return nil
 	}
-	arch := &entry.world.archetypes[entry.loc.archetype]
 	return archetype_get(arch, entry.loc.row, T, comp_id)
 }
 
 // Check if entity has a component
 @(require_results)
 entry_has :: #force_inline proc(entry: World_Entry, $T: typeid) -> bool {
-	if entry.loc.archetype == ARCHETYPE_NULL {
-		return false
-	}
 	comp_id, ok := world_get_component_id(entry.world, T)
 	if !ok {
 		return false
 	}
-	arch := &entry.world.archetypes[entry.loc.archetype]
+	return entry_has_by_id(entry, comp_id)
+}
+
+@(require_results)
+entry_has_by_id :: #force_inline proc(entry: World_Entry, comp_id: Component_ID) -> bool {
+	arch := entry_archetype(entry)
+	if arch == nil {
+		return false
+	}
 	return archetype_has(arch, comp_id)
 }
 
 // Get the entity's current archetype (nil if not entity has not components)
 @(require_results)
 entry_archetype :: #force_inline proc(entry: World_Entry) -> ^Archetype {
+	// Check cache
+	if entry.arch != nil {
+		return entry.arch
+	}
+
+	// Look it up
 	if entry.loc.archetype == ARCHETYPE_NULL {
 		return nil
 	}
@@ -78,13 +96,21 @@ entry_archetype :: #force_inline proc(entry: World_Entry) -> ^Archetype {
 entry_set :: proc(entry: ^World_Entry, value: $T) {
 	comp_id := world_register(entry.world, T)
     v := value
-    entry.loc, _ = world_set_entity_component(entry.world, entry.entity, comp_id, &v, entry.loc)
+    new_loc, loc_changed := world_set_entity_component(entry.world, entry.entity, comp_id, &v, entry.loc)
+	if loc_changed {
+		entry.loc = new_loc
+		entry.arch = nil
+	}
 }
 
 // Internal: Set component from raw data and Component_ID
 @(private)
 entry_set_raw :: proc(entry: ^World_Entry, comp_id: Component_ID, data: rawptr, size: int) {
-	entry.loc, _ = world_set_entity_component(entry.world, entry.entity, comp_id, data, entry.loc)
+	new_loc, loc_changed := world_set_entity_component(entry.world, entry.entity, comp_id, data, entry.loc)
+	if loc_changed {
+		entry.loc = new_loc
+		entry.arch = nil
+	}
 }
 
 // Remove a component from the entity. Moves entity to appropriate archetype.
@@ -92,13 +118,21 @@ entry_set_raw :: proc(entry: ^World_Entry, comp_id: Component_ID, data: rawptr, 
 entry_remove :: proc(entry: ^World_Entry, $T: typeid) {
     comp_id, ok := world_get_component_id(entry.world, T)
     if !ok { return }
-    entry.loc, _ = world_remove_entity_component(entry.world, entry.entity, comp_id, entry.loc)
+    new_loc, loc_changed := world_remove_entity_component(entry.world, entry.entity, comp_id, entry.loc)
+	if loc_changed {
+		entry.loc = new_loc
+		entry.arch = nil
+	}
 }
 
 // Internal: Remove component by Component_ID
 @(private)
 entry_remove_by_id :: proc(entry: ^World_Entry, comp_id: Component_ID) {
-    entry.loc, _ = world_remove_entity_component(entry.world, entry.entity, comp_id, entry.loc)
+    new_loc, loc_changed := world_remove_entity_component(entry.world, entry.entity, comp_id, entry.loc)
+	if loc_changed {
+		entry.loc = new_loc
+		entry.arch = nil
+	}
 }
 // Queue component add/update via entry.
 entry_queue_set :: proc(entry: ^World_Entry, component: $T) {
