@@ -1,6 +1,5 @@
 package ash
 
-import "core:fmt"
 Component_ID :: distinct u16
 
 // Represents information needed for getting and setting a component.
@@ -20,6 +19,11 @@ Component_Registry :: struct {
 registry_init :: proc(reg: ^Component_Registry, allocator := context.allocator) {
 	reg.infos = make([dynamic]Component_Info, allocator)
 	reg.type_to_id = make(map[typeid]Component_ID, allocator)
+}
+
+registry_destroy :: proc(reg: ^Component_Registry) {
+	delete(reg.infos)
+	delete(reg.type_to_id)
 }
 
 registry_register :: proc(reg: ^Component_Registry, $T: typeid) -> Component_ID {
@@ -58,31 +62,20 @@ registry_register_dynamic :: proc(reg: ^Component_Registry, type: typeid) -> Com
 	return comp_id
 }
 
-registry_get_id :: proc(reg: ^Component_Registry, $T: typeid) -> (Component_ID, bool) {
+registry_get_id :: #force_inline proc(reg: ^Component_Registry, $T: typeid) -> (Component_ID, bool) {
 	id, ok := reg.type_to_id[T]
 	return id, ok
 }
 
-registry_get_id_dynamic :: proc(reg: ^Component_Registry, type: typeid) -> (Component_ID, bool) {
+registry_get_id_dynamic :: #force_inline proc(reg: ^Component_Registry, type: typeid) -> (Component_ID, bool) {
 	id, ok := reg.type_to_id[type]
 	return id, ok
 }
 
-registry_get_info :: proc(
-	reg: ^Component_Registry,
-	id: Component_ID,
-) -> (
-	^Component_Info,
-	bool,
-) #optional_ok {
+registry_get_info :: #force_inline proc( reg: ^Component_Registry, id: Component_ID, ) -> ( ^Component_Info, bool, ) #optional_ok {
 	index := int(id)
 	if index < 0 || index >= len(reg.infos) {
 		return nil, false
 	}
 	return &reg.infos[id], true
-}
-
-registry_destroy :: proc(reg: ^Component_Registry) {
-	delete(reg.infos)
-	delete(reg.type_to_id)
 }

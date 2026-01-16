@@ -5,14 +5,14 @@ import "core:mem"
 Entity_Location :: struct {
 	archetype: Archetype_Index,
 	row:       int,
-	version:   u32,
+	generation:   u32,
 	valid:     bool,
 }
 
 LOCATION_INVALID :: Entity_Location {
 	archetype = ARCHETYPE_NULL,
 	row       = -1,
-	version   = 0,
+	generation   = 0,
 	valid     = false,
 }
 
@@ -38,7 +38,7 @@ location_map_insert :: proc(
 	id: u32,
 	arch: Archetype_Index,
 	row: int,
-	version: u32 = 0,
+	generation: u32 = 0,
 ) {
 	assert(id > 0, "Entity ID must be >= 1 (o is reserved for ENTITY_NULL)")
 
@@ -50,7 +50,7 @@ location_map_insert :: proc(
 	lm.locations[idx] = Entity_Location {
 		archetype = arch,
 		row       = row,
-		version   = version,
+		generation   = generation,
 		valid     = true,
 	}
 

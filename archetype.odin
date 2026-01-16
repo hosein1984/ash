@@ -62,7 +62,7 @@ archetype_destroy :: proc(arch: ^Archetype) {
 }
 
 // Add entity to archtetype, returns row index
-archetype_push_entity :: proc(arch: ^Archetype, entity: Entity) -> int {
+archetype_add_entity :: proc(arch: ^Archetype, entity: Entity) -> int {
 	row := len(arch.entities)
 	append(&arch.entities, entity)
 
@@ -161,4 +161,17 @@ archetype_matches :: proc(arch: ^Archetype, required: []Component_ID) -> bool {
 		}
 	}
 	return true
+}
+
+// Reserve space for N more entities (pre-allocate columns)
+archetype_reserve :: proc(arch: ^Archetype, new_entities: int) {
+    new_cap := archetype_entity_count(arch) + new_entities
+
+    // Reserve in entity array
+    reserve(&arch.entities, new_cap)
+
+    // Reserve in each column
+    for &col in arch.columns {
+        column_reserve(&col, new_cap)
+    }
 }

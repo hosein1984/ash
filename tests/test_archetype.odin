@@ -24,7 +24,7 @@ test_archetype_init_destroy :: proc(t: ^testing.T) {
 }
 
 @(test)
-test_archetype_push_entity :: proc(t: ^testing.T) {
+test_archetype_add_entity :: proc(t: ^testing.T) {
 	reg: ash.Component_Registry
 	ash.registry_init(&reg)
 	defer ash.registry_destroy(&reg)
@@ -38,8 +38,8 @@ test_archetype_push_entity :: proc(t: ^testing.T) {
 	e1 := ash.entity_make(1, 0)
 	e2 := ash.entity_make(2, 0)
 
-	row1 := ash.archetype_push_entity(&arch, e1)
-	row2 := ash.archetype_push_entity(&arch, e2)
+	row1 := ash.archetype_add_entity(&arch, e1)
+	row2 := ash.archetype_add_entity(&arch, e2)
 
 	testing.expect_value(t, row1, 0)
 	testing.expect_value(t, row2, 1)
@@ -68,9 +68,9 @@ test_archetype_swap_remove :: proc(t: ^testing.T) {
 	p2 := Position{2, 2}
 	p3 := Position{3, 3}
 
-	row1 := ash.archetype_push_entity(&arch, e1)
-	row2 := ash.archetype_push_entity(&arch, e2)
-	row3 := ash.archetype_push_entity(&arch, e3)
+	row1 := ash.archetype_add_entity(&arch, e1)
+	row2 := ash.archetype_add_entity(&arch, e2)
+	row3 := ash.archetype_add_entity(&arch, e3)
 
 	col := ash.archetype_get_column(&arch, pos_id)
 	ash.column_set(col, row1, &p1)
@@ -106,8 +106,8 @@ test_archetype_swap_remove_last :: proc(t: ^testing.T) {
 	e1 := ash.entity_make(1, 0)
 	e2 := ash.entity_make(2, 0)
 
-	ash.archetype_push_entity(&arch, e1)
-	ash.archetype_push_entity(&arch, e2)
+	ash.archetype_add_entity(&arch, e1)
+	ash.archetype_add_entity(&arch, e2)
 
 	// Remove last entity - no swap needed
 	moved := ash.archetype_swap_remove(&arch, 1)
@@ -158,7 +158,7 @@ test_archetype_multiple_component :: proc(t: ^testing.T) {
 
 	for i in 0 ..< 3 {
 		e := ash.entity_make(u32(i + 1), 0)
-		row := ash.archetype_push_entity(&arch, e)
+		row := ash.archetype_add_entity(&arch, e)
 
 		pos := Position{f32(i), f32(i * 2)}
 		vel := Velocity{f32(i) * 0.1, f32(i) * 0.2}
@@ -191,7 +191,7 @@ test_archetype_zero_size_component :: proc(t: ^testing.T) {
 	defer ash.archetype_destroy(&arch)
 
 	e := ash.entity_make(1, 0)
-	ash.archetype_push_entity(&arch, e)
+	ash.archetype_add_entity(&arch, e)
 
 	testing.expect_value(t, ash.archetype_entity_count(&arch), 1)
 	testing.expect(t, ash.archetype_has(&arch, tag_id), "Should have tag")

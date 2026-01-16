@@ -1,6 +1,5 @@
 package ash
 
-import "core:fmt"
 import "core:slice"
 import "core:mem"
 

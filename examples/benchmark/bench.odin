@@ -1,10 +1,11 @@
 package benchmark
 
-import ash "../.."
 import "base:runtime"
 import "core:fmt"
 import "core:math/rand"
 import "core:time"
+
+import "../.."
 
 // odinfmt: disable
 Position :: struct { x, y: f64 }

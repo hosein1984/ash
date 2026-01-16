@@ -1,6 +1,7 @@
 package ash
 
 import "core:mem"
+
 Observer_Handle   :: distinct u32
 Observer_Callback :: #type proc(world: ^World, entity: Entity, user_data: rawptr)
 
@@ -11,11 +12,11 @@ Observer :: struct {
 }
 
 Observer_Kind :: enum {
-    Spawn,      // Spawn an entity
-    Despawn,    // Despawn an entity
-    Insert,     // Add a component to an entity
-    Set,        // Set/Update a component value
-    Remove      // Remove a component from an entity
+    Spawn,   // Entity created (after all initial components added)
+    Despawn, // Entity destroyed (before removal, components still accessible)
+    Add,     // Component added to entity (first time this component type)
+    Update,  // Component value updated (entity already had this component)
+    Remove,  // Component removed from entity (before removal, value still accessible)
 }
 
 Observer_Location :: struct {
@@ -25,49 +26,49 @@ Observer_Location :: struct {
 }
 
 Observers :: struct {
-    allocator:      mem.Allocator,
+    allocator:          mem.Allocator,
 
-    spawn:          [dynamic]Observer,
-    despawn:        [dynamic]Observer,
-    insert:         map[Component_ID][dynamic]Observer,
-    set:            map[Component_ID][dynamic]Observer,
-    remove:         map[Component_ID][dynamic]Observer,
+    spawn_observers:    [dynamic]Observer,
+    despawn_observers:  [dynamic]Observer,
+    add_observers:      map[Component_ID][dynamic]Observer,
+    update_observers:   map[Component_ID][dynamic]Observer,
+    remove_observers:   map[Component_ID][dynamic]Observer,
 
-    next_handle:    Observer_Handle,
-    registry:       map[Observer_Handle]Observer_Location
+    next_handle:        Observer_Handle,
+    registry:           map[Observer_Handle]Observer_Location
 }
 
 observers_init :: proc(obs: ^Observers, allocator := context.allocator) {
     obs.allocator = allocator
 
-    obs.spawn     = make([dynamic]Observer, allocator)
-    obs.despawn   = make([dynamic]Observer, allocator)
-    obs.insert    = make(map[Component_ID][dynamic]Observer, allocator)
-    obs.set       = make(map[Component_ID][dynamic]Observer, allocator)
-    obs.remove    = make(map[Component_ID][dynamic]Observer, allocator)
+    obs.spawn_observers     = make([dynamic]Observer, allocator)
+    obs.despawn_observers   = make([dynamic]Observer, allocator)
+    obs.add_observers       = make(map[Component_ID][dynamic]Observer, allocator)
+    obs.update_observers    = make(map[Component_ID][dynamic]Observer, allocator)
+    obs.remove_observers    = make(map[Component_ID][dynamic]Observer, allocator)
 
     obs.next_handle = 1
     obs.registry    = make(map[Observer_Handle]Observer_Location, allocator)
 }
 
 observers_destroy :: proc(obs: ^Observers) {
-    delete(obs.spawn)
-    delete(obs.despawn)
+    delete(obs.spawn_observers)
+    delete(obs.despawn_observers)
 
-    for _, &list in obs.insert {
+    for _, &list in obs.add_observers {
         delete(list)
     }
-    delete(obs.insert)
+    delete(obs.add_observers)
 
-    for _, &list in obs.set {
+    for _, &list in obs.update_observers {
         delete(list)
     }
-    delete(obs.set)
+    delete(obs.update_observers)
 
-    for _, &list in obs.remove {
+    for _, &list in obs.remove_observers {
         delete(list)
     }
-    delete(obs.remove)
+    delete(obs.remove_observers)
 
     delete(obs.registry)
 }
@@ -81,11 +82,11 @@ observers_on_spawn :: proc(obs: ^Observers, callback: Observer_Callback, user_da
     obs.next_handle += 1
     
     observer := Observer{handle, callback, user_data}
-    append(&obs.spawn, observer)
+    append(&obs.spawn_observers, observer)
     
     obs.registry[handle] = Observer_Location{
         kind  = .Spawn,
-        index = len(obs.spawn) - 1,
+        index = len(obs.spawn_observers) - 1,
     }
     
     return handle
@@ -96,53 +97,53 @@ observers_on_despawn :: proc(obs: ^Observers, callback: Observer_Callback, user_
     obs.next_handle += 1
     
     observer := Observer{handle, callback, user_data}
-    append(&obs.despawn, observer)
+    append(&obs.despawn_observers, observer)
     
     obs.registry[handle] = Observer_Location{
         kind  = .Despawn,
-        index = len(obs.despawn) - 1,
+        index = len(obs.despawn_observers) - 1,
     }
     
     return handle
 }
 
-observers_on_insert :: proc(obs: ^Observers, comp_id: Component_ID, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
+observers_on_add :: proc(obs: ^Observers, comp_id: Component_ID, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
     handle := obs.next_handle
     obs.next_handle += 1
     
     // Ensure dynamic array exists for this component
-    if comp_id not_in obs.insert {
-        obs.insert[comp_id] = make([dynamic]Observer, obs.allocator)
+    if comp_id not_in obs.add_observers {
+        obs.add_observers[comp_id] = make([dynamic]Observer, obs.allocator)
     }
     
     observer := Observer{handle, callback, user_data}
-    append(&obs.insert[comp_id], observer)
+    append(&obs.add_observers[comp_id], observer)
     
     obs.registry[handle] = Observer_Location{
-        kind         = .Insert,
+        kind         = .Add,
         component_id = comp_id,
-        index        = len(obs.insert[comp_id]) - 1,
+        index        = len(obs.add_observers[comp_id]) - 1,
     }
     
     return handle
 }
 
-observers_on_set :: proc(obs: ^Observers, comp_id: Component_ID, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
+observers_on_update :: proc(obs: ^Observers, comp_id: Component_ID, callback: Observer_Callback, user_data: rawptr = nil) -> Observer_Handle {
     handle := obs.next_handle
     obs.next_handle += 1
     
     // Ensure dynamic array exists for this component
-    if comp_id not_in obs.set {
-        obs.set[comp_id] = make([dynamic]Observer, obs.allocator)
+    if comp_id not_in obs.update_observers {
+        obs.update_observers[comp_id] = make([dynamic]Observer, obs.allocator)
     }
     
     observer := Observer{handle, callback, user_data}
-    append(&obs.set[comp_id], observer)
+    append(&obs.update_observers[comp_id], observer)
     
     obs.registry[handle] = Observer_Location{
-        kind         = .Set,
+        kind         = .Update,
         component_id = comp_id,
-        index        = len(obs.set[comp_id]) - 1,
+        index        = len(obs.update_observers[comp_id]) - 1,
     }
     
     return handle
@@ -153,17 +154,17 @@ observers_on_remove :: proc(obs: ^Observers, comp_id: Component_ID, callback: Ob
     obs.next_handle += 1
     
     // Ensure dynamic array exists for this component
-    if comp_id not_in obs.remove {
-        obs.remove[comp_id] = make([dynamic]Observer, obs.allocator)
+    if comp_id not_in obs.remove_observers {
+        obs.remove_observers[comp_id] = make([dynamic]Observer, obs.allocator)
     }
     
     observer := Observer{handle, callback, user_data}
-    append(&obs.remove[comp_id], observer)
+    append(&obs.remove_observers[comp_id], observer)
     
     obs.registry[handle] = Observer_Location{
         kind         = .Remove,
         component_id = comp_id,
-        index        = len(obs.remove[comp_id]) - 1,
+        index        = len(obs.remove_observers[comp_id]) - 1,
     }
     
     return handle
@@ -184,15 +185,15 @@ observers_unregister :: proc(obs: ^Observers, handle: Observer_Handle) {
     list: ^[dynamic]Observer
     switch loc.kind {
     case .Spawn:
-        list = &obs.spawn
+        list = &obs.spawn_observers
     case .Despawn:
-        list = &obs.despawn
-    case .Insert:
-        list = &obs.insert[loc.component_id]
-    case .Set:
-        list = &obs.set[loc.component_id]
+        list = &obs.despawn_observers
+    case .Add:
+        list = &obs.add_observers[loc.component_id]
+    case .Update:
+        list = &obs.update_observers[loc.component_id]
     case .Remove:
-        list = &obs.remove[loc.component_id]
+        list = &obs.remove_observers[loc.component_id]
     }
     
     // Swap-remove from list
@@ -221,21 +222,21 @@ observers_unregister :: proc(obs: ^Observers, handle: Observer_Handle) {
 
 @(private)
 observers_notify_spawn :: proc(obs: ^Observers, world: ^World, entity: Entity) {
-    for &o in obs.spawn {
+    for &o in obs.spawn_observers {
         o.callback(world, entity, o.user_data)
     }
 }
 
 @(private)
 observers_notify_despawn :: proc(obs: ^Observers, world: ^World, entity: Entity) {
-    for &o in obs.despawn {
+    for &o in obs.despawn_observers {
         o.callback(world, entity, o.user_data)
     }
 }
 
 @(private)
-observers_notify_insert :: proc(obs: ^Observers, world: ^World, entity: Entity, comp_id: Component_ID) {
-    if list, ok := &obs.insert[comp_id]; ok {
+observers_notify_add :: proc(obs: ^Observers, world: ^World, entity: Entity, comp_id: Component_ID) {
+    if list, ok := &obs.add_observers[comp_id]; ok {
         for &o in list {
             o.callback(world, entity, o.user_data)
         }
@@ -243,8 +244,8 @@ observers_notify_insert :: proc(obs: ^Observers, world: ^World, entity: Entity, 
 }
 
 @(private)
-observers_notify_set :: proc(obs: ^Observers, world: ^World, entity: Entity, comp_id: Component_ID) {
-    if list, ok := &obs.set[comp_id]; ok {
+observers_notify_update :: proc(obs: ^Observers, world: ^World, entity: Entity, comp_id: Component_ID) {
+    if list, ok := &obs.update_observers[comp_id]; ok {
         for &o in list {
             o.callback(world, entity, o.user_data)
         }
@@ -253,7 +254,7 @@ observers_notify_set :: proc(obs: ^Observers, world: ^World, entity: Entity, com
 
 @(private)
 observers_notify_remove :: proc(obs: ^Observers, world: ^World, entity: Entity, comp_id: Component_ID) {
-    if list, ok := &obs.remove[comp_id]; ok {
+    if list, ok := &obs.remove_observers[comp_id]; ok {
         for &o in list {
             o.callback(world, entity, o.user_data)
         }

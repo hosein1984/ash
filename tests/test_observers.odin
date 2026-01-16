@@ -160,11 +160,11 @@ test_on_despawn_components_accessible :: proc(t: ^testing.T) {
 }
 
 // ============================================================================
-// INSERT OBSERVERS
+// ADD OBSERVERS
 // ============================================================================
 
 @(test)
-test_on_insert_fires_on_spawn :: proc(t: ^testing.T) {
+test_on_add_fires_on_spawn :: proc(t: ^testing.T) {
     world: ash.World
     ash.world_init(&world)
     defer ash.world_destroy(&world)
@@ -175,11 +175,11 @@ test_on_insert_fires_on_spawn :: proc(t: ^testing.T) {
     pos_count := 0
     vel_count := 0
     
-    ash.world_on_insert(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
+    ash.world_on_add(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
         (^int)(ctx)^ += 1
     }, &pos_count)
     
-    ash.world_on_insert(&world, Velocity, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
+    ash.world_on_add(&world, Velocity, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
         (^int)(ctx)^ += 1
     }, &vel_count)
     
@@ -195,7 +195,7 @@ test_on_insert_fires_on_spawn :: proc(t: ^testing.T) {
 }
 
 @(test)
-test_on_insert_fires_on_entry_set :: proc(t: ^testing.T) {
+test_on_add_fires_on_entry_set :: proc(t: ^testing.T) {
     world: ash.World
     ash.world_init(&world)
     defer ash.world_destroy(&world)
@@ -204,7 +204,7 @@ test_on_insert_fires_on_entry_set :: proc(t: ^testing.T) {
     ash.world_register(&world, Velocity)
     
     count := 0
-    ash.world_on_insert(&world, Velocity, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
+    ash.world_on_add(&world, Velocity, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
         (^int)(ctx)^ += 1
     }, &count)
     
@@ -218,7 +218,7 @@ test_on_insert_fires_on_entry_set :: proc(t: ^testing.T) {
 }
 
 @(test)
-test_on_insert_not_fired_on_update :: proc(t: ^testing.T) {
+test_on_add_not_fired_on_update :: proc(t: ^testing.T) {
     world: ash.World
     ash.world_init(&world)
     defer ash.world_destroy(&world)
@@ -226,7 +226,7 @@ test_on_insert_not_fired_on_update :: proc(t: ^testing.T) {
     ash.world_register(&world, Position)
     
     count := 0
-    ash.world_on_insert(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
+    ash.world_on_add(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
         (^int)(ctx)^ += 1
     }, &count)
     
@@ -241,7 +241,7 @@ test_on_insert_not_fired_on_update :: proc(t: ^testing.T) {
 }
 
 @(test)
-test_on_insert_data_accessible :: proc(t: ^testing.T) {
+test_on_add_data_accessible :: proc(t: ^testing.T) {
     world: ash.World
     ash.world_init(&world)
     defer ash.world_destroy(&world)
@@ -249,7 +249,7 @@ test_on_insert_data_accessible :: proc(t: ^testing.T) {
     ash.world_register(&world, Position)
     
     captured_pos: Position
-    ash.world_on_insert(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
+    ash.world_on_add(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
         entry := ash.world_entry(w, e)
         pos := ash.entry_get(entry, Position)
         (^Position)(ctx)^ = pos^
@@ -373,7 +373,7 @@ test_unobserve_insert :: proc(t: ^testing.T) {
     ash.world_register(&world, Position)
     
     count := 0
-    handle := ash.world_on_insert(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
+    handle := ash.world_on_add(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
         (^int)(ctx)^ += 1
     }, &count)
     
@@ -480,14 +480,14 @@ test_observers_fire_on_flush :: proc(t: ^testing.T) {
     
     testing.expect_value(t, spawn_count, 0)  // Not yet
     
-    ash.world_flush(&world)
+    ash.world_flush_queue(&world)
     
     testing.expect_value(t, spawn_count, 1)  // Now fired
     
     ash.world_queue_despawn(&world, e)
     testing.expect_value(t, despawn_count, 0)
     
-    ash.world_flush(&world)
+    ash.world_flush_queue(&world)
     testing.expect_value(t, despawn_count, 1)
 }
 
@@ -505,7 +505,7 @@ test_spawn_order_insert_then_spawn :: proc(t: ^testing.T) {
     
     order := make([dynamic]string, context.temp_allocator)
     
-    ash.world_on_insert(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
+    ash.world_on_add(&world, Position, proc(w: ^ash.World, e: ash.Entity, ctx: rawptr) {
         append((^[dynamic]string)(ctx), "insert")
     }, &order)
     

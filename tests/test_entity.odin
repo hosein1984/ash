@@ -8,15 +8,15 @@ import ".."
 test_entity_pack_unpack :: proc(t: ^testing.T) {
     e := ash.entity_make(12345, 67)
     testing.expect_value(t, ash.entity_id(e), 12345)
-    testing.expect_value(t, ash.entity_version(e), 67)
+    testing.expect_value(t, ash.entity_generation(e), 67)
 }
 
 @(test)
-test_entity_version_increment :: proc(t: ^testing.T) {
+test_entity_generation_increment :: proc(t: ^testing.T) {
     e1 := ash.entity_make(100, 5)
-    e2 := ash.entity_inc_version(e1)
+    e2 := ash.entity_inc_generation(e1)
     testing.expect_value(t, ash.entity_id(e2), 100)
-    testing.expect_value(t, ash.entity_version(e2), 6)
+    testing.expect_value(t, ash.entity_generation(e2), 6)
 }
 
 @(test)
