@@ -29,9 +29,9 @@ Query_Arch_Iter :: struct {
 // QUERY LIFECYCLE
 // ============================================================================
 
-
 // Create query with filter (automatically cleans up after itself)
 // At the moment I don't see any use case for passing iterators around, so auto-cleaning should be fine.
+@(private)
 query_create :: proc(world: ^World, filter: Filter, allocator := context.allocator) -> Query {
 	return Query {
 		world = world,
@@ -42,6 +42,7 @@ query_create :: proc(world: ^World, filter: Filter, allocator := context.allocat
 }
 
 // Destroy query and free cache
+@(private)
 query_destroy :: proc(q: ^Query) {
 	delete(q.cached_archs)
 }
@@ -190,9 +191,6 @@ unlock_query_arch_iter :: #force_inline proc(it: ^Query_Arch_Iter) {
 		it.locked = false
 	}
 }
-
-
-
 
 // ============================================================
 // UTILITY FUNCTIONS
