@@ -42,6 +42,8 @@ jobs:
         run: |
           odin check examples/01_basic -vet
           odin check examples/02_observers -vet
+          odin check examples/03_systems -vet
+          odin check examples/04_scheduler -vet
           odin check examples/bench1 -vet
           odin check examples/bench2 -vet
 
