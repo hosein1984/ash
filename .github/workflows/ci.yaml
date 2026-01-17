@@ -40,11 +40,13 @@ jobs:
 
       - name: Check examples
         run: |
-          odin check examples/benchmark -vet
           odin check examples/basic -vet
+          odin check examples/bench1 -vet
+          odin check examples/bench2 -vet
 
-      - name: Build benchmark
-        run: odin build examples/benchmark -o:speed
+      # - name: Build benchmark
+        # run: odin build examples/bench1 -o:speed
+        # run: odin build examples/bench2 -o:speed
 
       # - name: Run benchmark
       #   run: ./benchmark

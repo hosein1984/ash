@@ -1,12 +1,12 @@
-package benchmark
+package bench1
 
-import ash "../.."
-import "base:intrinsics"
 import "base:runtime"
 import "core:fmt"
 import "core:math/rand"
 import "core:sys/info"
 import "core:time"
+
+import "../.."
 
 // ============================================================================
 // Components

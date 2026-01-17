@@ -125,14 +125,14 @@ query_next :: #force_inline proc(it: ^Query_Entry_Iter) -> (World_Entry, bool) {
     return {}, false
 }
 
-lock_query_iter :: #force_inline proc(it: ^Query_Entry_Iter) {
+lock_query_iter :: #force_inline proc "contextless" (it: ^Query_Entry_Iter) {
     if !it.locked {
         world_lock(it.query.world)
         it.locked = true
     }
 }
 
-unlock_query_iter :: #force_inline proc(it: ^Query_Entry_Iter) {
+unlock_query_iter :: #force_inline proc "contextless" (it: ^Query_Entry_Iter) {
     if it.locked {
         world_unlock(it.query.world)
         it.locked = false
@@ -198,6 +198,13 @@ unlock_query_arch_iter :: #force_inline proc(it: ^Query_Arch_Iter) {
 query_first :: proc(q: ^Query) -> (World_Entry, bool) {
     it := query_iter(q)
     return query_next(&it)
+}
+
+// Ensure a single matching entry exists and is returned
+query_single :: proc(q: ^Query) -> (World_Entry, bool) {
+    count := query_count(q)
+    if count != 1 { return {}, false }
+    return query_first(q)
 }
 
 // Count matching entities

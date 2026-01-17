@@ -38,9 +38,9 @@ test_mask_from_id :: proc(t: ^testing.T) {
 
 @(test)
 test_mask_contains_all :: proc(t: ^testing.T) {
-    a := ash.Component_Mask{0, 1, 2, 3}
-    b := ash.Component_Mask{1, 2}
-    c := ash.Component_Mask{1, 5}
+    a := ash.mask_from_ids(0, 1, 2, 3)
+    b := ash.mask_from_ids(1, 2)
+    c := ash.mask_from_ids(1, 5)
     empty := ash.Component_Mask{}
 
     testing.expect(t, ash.mask_contains_all(a, b), "a contains all of b")
@@ -74,9 +74,9 @@ test_mask_intersects :: proc(t: ^testing.T) {
 
 @(test)
 test_mask_equals :: proc(t: ^testing.T) {
-    a := ash.Component_Mask{1, 2}
-    b := ash.Component_Mask{1, 2}
-    c := ash.Component_Mask{1}
+    a := ash.mask_from_ids(1, 2)
+    b := ash.mask_from_ids(1, 2)
+    c := ash.mask_from_ids(1)
 
     testing.expect(t, ash.mask_equals(a, b), "a equals b")
     testing.expect(t, !ash.mask_equals(a, c), "a does not equal c")
@@ -93,4 +93,7 @@ test_mask_count :: proc(t: ^testing.T) {
     ash.mask_add(&mask, 5)
     ash.mask_add(&mask, 63)
     testing.expect_value(t, ash.mask_count(mask), 3)
+
+    ash.mask_add(&mask, 120)
+    testing.expect_value(t, ash.mask_count(mask), 4)
 }

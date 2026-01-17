@@ -156,13 +156,13 @@ filter_hash :: proc(f: Filter) -> u64 {
     for i in 0 ..< int(f.clause_count) {
         clause := f.clauses[i]
         
-        h ~= mask_to_u64(clause.requires)
+        h ~= mask_hash(clause.requires)
         h *= prime
         
-        h ~= mask_to_u64(clause.excludes)
+        h ~= mask_hash(clause.excludes)
         h *= prime
         
-        h ~= mask_to_u64(clause.anyof)
+        h ~= mask_hash(clause.anyof)
         h *= prime
     }
     return h
