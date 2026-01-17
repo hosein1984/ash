@@ -50,15 +50,10 @@ test_queue_despawn :: proc(t: ^testing.T) {
     q := ash.world_query(&world, f)
 
     it := ash.query_iter(q)
-    for {
-        entry, ok := ash.query_next(&it)
-        if !ok {
-            break
-        }
-
+    for entry in ash.query_next(&it) {
         health := ash.entry_get(entry, Health)
         if health.hp <= 0 {
-            ash.entry_queue_despawn(&entry)
+            ash.entry_queue_despawn(entry)
         }
     }
 
@@ -156,12 +151,8 @@ test_entry_queue_set :: proc(t: ^testing.T) {
     q := ash.world_query(&world, f)
 
     it := ash.query_iter(q)
-    for {
-        entry, ok := ash.query_next(&it)
-        if !ok {
-            break
-        }
-        ash.entry_queue_set(&entry, Velocity{1, 2})
+    for entry in ash.query_next(&it) {
+        ash.entry_queue_set(entry, Velocity{1, 2})
     }
 
     // Not added yet
@@ -192,12 +183,8 @@ test_entry_queue_remove :: proc(t: ^testing.T) {
     q := ash.world_query(&world, f)
 
     it := ash.query_iter(q)
-    for {
-        entry, ok := ash.query_next(&it)
-        if !ok {
-            break
-        }
-        ash.entry_queue_remove(&entry, Velocity)
+    for entry in ash.query_next(&it) {
+        ash.entry_queue_remove(entry, Velocity)
     }
 
     ash.world_flush_queue(&world)
@@ -244,12 +231,8 @@ test_clear_queue :: proc(t: ^testing.T) {
     q := ash.world_query(&world, ash.FILTER_ALL)
 
     it := ash.query_iter(q)
-    for {
-        entry, ok := ash.query_next(&it)
-        if !ok {
-            break
-        }
-        ash.entry_queue_despawn(&entry)
+    for entry in ash.query_next(&it) {
+        ash.entry_queue_despawn(entry)
     }
 
     testing.expect(t, ash.world_has_pending_commands(&world))
