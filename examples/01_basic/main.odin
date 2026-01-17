@@ -1,6 +1,5 @@
 package basic
 
-import "core:crypto"
 import "core:fmt"
 import "core:math/rand"
 
@@ -33,8 +32,6 @@ Poisoned  :: struct {}
 // ============================================================================
 
 main :: proc() {
-    context.random_generator = crypto.random_generator()
-
     world: ash.World
     ash.world_init(&world)
     defer ash.world_destroy(&world)

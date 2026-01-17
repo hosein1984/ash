@@ -516,8 +516,8 @@ test_spawn_order_insert_then_spawn :: proc(t: ^testing.T) {
     ash.world_spawn(&world, Position{})
     
     testing.expect_value(t, len(order), 2)
-    testing.expect_value(t, order[0], "insert")
-    testing.expect_value(t, order[1], "spawn")
+    testing.expect_value(t, order[0], "spawn")
+    testing.expect_value(t, order[1], "insert")
 }
 
 @(test)
@@ -542,8 +542,8 @@ test_despawn_order_despawn_then_remove :: proc(t: ^testing.T) {
     ash.world_despawn(&world, e)
     
     testing.expect_value(t, len(order), 2)
-    testing.expect_value(t, order[0], "despawn")
-    testing.expect_value(t, order[1], "remove")
+    testing.expect_value(t, order[0], "remove")
+    testing.expect_value(t, order[1], "despawn")
 }
 
 @(test)

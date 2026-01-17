@@ -86,6 +86,6 @@ ash.world_flush_queue(&world)
 ## Running
 
 ```bash
-cd examples/basic
+cd examples/01_basic
 odin run .
 ```

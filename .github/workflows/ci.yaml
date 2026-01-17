@@ -40,7 +40,8 @@ jobs:
 
       - name: Check examples
         run: |
-          odin check examples/basic -vet
+          odin check examples/01_basic -vet
+          odin check examples/02_observers -vet
           odin check examples/bench1 -vet
           odin check examples/bench2 -vet
 

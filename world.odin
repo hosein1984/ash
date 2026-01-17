@@ -143,9 +143,14 @@ Comp_Entry :: struct {
 }
 
 // Spawn an entity with initial components.
+//
 // Usage:
 // 	 world_spawn(&world})
 // 	 world_spawn(&world, Position{1,2}, Velocity{3,4}, Health{100})
+//
+// Notification order:
+//   1. Entity spawn observers
+//   2. Component add observers for each component
 world_spawn :: proc(world: ^World, components: ..any, caller_loc := #caller_location) -> Entity {
     if len(components) == 0 {
         entity := world_next_entity(world)
@@ -205,15 +210,22 @@ world_spawn :: proc(world: ^World, components: ..any, caller_loc := #caller_loca
 
     for entry, i in entries {
         column_set_raw(&arch.columns[i], row, entry.data)
-        observers_notify_add(&world.observers, world, entity, entry.id)
     }
 
+    // Notify observers (after entity is fully created)
     observers_notify_spawn(&world.observers, world, entity)
+    for entry in entries {
+        observers_notify_add(&world.observers, world, entity, entry.id)
+    }
 
     return entity
 }
 
 // Spawn multiple entities with the same components
+//
+// Notification order:
+//   1. Component add observers for each component of each entity
+//   2. Entity spawn observers for each entity
 world_spawn_batch :: proc(world: ^World, count: int, components: ..any, allocator := context.temp_allocator, caller_loc := #caller_location) -> []Entity {
     if count == 0 { return nil }
 
@@ -261,7 +273,6 @@ world_spawn_batch :: proc(world: ^World, count: int, components: ..any, allocato
         // Direct column indexing
         for entry, col_idx in entries {
             column_set_raw(&arch.columns[col_idx], row, entry.data)
-            observers_notify_add(&world.observers, world, entities[i], entry.id)
         }
 
         location_map_insert(
@@ -271,13 +282,24 @@ world_spawn_batch :: proc(world: ^World, count: int, components: ..any, allocato
             row,
             entity_generation(entities[i]),
         )
-        observers_notify_spawn(&world.observers, world, entities[i])
+    }
+
+    // Notify observers (after all entities are created)
+    for e in entities {
+        for entry in entries {
+            observers_notify_add(&world.observers, world, e, entry.id)
+        }
+        observers_notify_spawn(&world.observers, world, e)
     }
     
     return entities
 }
 
 // Despawn an entity.
+//
+// Notification order:
+//   1. Component remove observers for all components
+//   2. Entity despawn observers
 world_despawn :: proc(world: ^World, entity: Entity, caller_loc := #caller_location) {
     if !world_is_alive(world, entity) {
         return
@@ -294,16 +316,19 @@ world_despawn :: proc(world: ^World, entity: Entity, caller_loc := #caller_locat
 
     loc := world_get_entity_location(world, entity)
 
+    // Notify observers (before removing so everything is still accessible)
+    if loc.archetype != ARCHETYPE_NULL {
+        arch := &world.archetypes[loc.archetype]
+        for comp_id in arch.layout.components {
+            observers_notify_remove(&world.observers, world, entity, comp_id)
+        }
+    }
     observers_notify_despawn(&world.observers, world, entity)
 
 
     // Remove from archetype if entity has components
     if loc.archetype != ARCHETYPE_NULL {
         arch := &world.archetypes[loc.archetype]
-
-        for comp_id in arch.layout.components {
-            observers_notify_remove(&world.observers, world, entity, comp_id)
-        }
 
         moved_entity := archetype_swap_remove(arch, loc.row)
         if moved_entity != ENTITY_NULL {
@@ -669,7 +694,6 @@ world_flush_queue :: proc(world: ^World, caller_loc := #caller_location) {
                     if col != nil {
                         column_set_raw(col, row, c.data)
                     }
-                    observers_notify_add(&world.observers, world, cmd.entity, c.id)
                 }
 
                 location_map_insert(
@@ -680,7 +704,11 @@ world_flush_queue :: proc(world: ^World, caller_loc := #caller_location) {
                     entity_generation(cmd.entity),
                 )
 
+                // Notify observers (after entity is fully created)
                 observers_notify_spawn(&world.observers, world, cmd.entity)
+                for c in cmd.components {
+                    observers_notify_add(&world.observers, world, cmd.entity, c.id)
+                }
             }
         case .Despawn:
             world_despawn(world, cmd.entity)
