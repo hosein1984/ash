@@ -4,70 +4,70 @@ import "core:fmt"
 import "core:strings"
 
 World_Stats :: struct {
-	entity_count:    int,
-	entity_capacity: int,
-	free_list_count: int,
-	archetype_count: int,
-	component_count: int,
-	total_memory:    int, // Approximate bytes used
-	archetype_stats: []Archetype_Stats, // Per-archetype breakdown
+    entity_count:    int,
+    entity_capacity: int,
+    free_list_count: int,
+    archetype_count: int,
+    component_count: int,
+    total_memory:    int, // Approximate bytes used
+    archetype_stats: []Archetype_Stats, // Per-archetype breakdown
 }
 
 Archetype_Stats :: struct {
-	index:           Archetype_Index,
-	entity_count:    int,
-	component_count: int,
-	components:      []typeid,
-	memory_used:     int,
+    index:           Archetype_Index,
+    entity_count:    int,
+    component_count: int,
+    components:      []typeid,
+    memory_used:     int,
 }
 
 world_stats :: proc(world: ^World, allocator := context.allocator) -> World_Stats {
-	stats: World_Stats
+    stats: World_Stats
 
-	stats.entity_count = location_map_len(&world.locations)
-	stats.entity_capacity = len(&world.locations.locations)
-	stats.free_list_count = len(world.free_list)
-	stats.archetype_count = len(world.archetypes)
-	stats.component_count = len(world.registry.infos)
+    stats.entity_count = location_map_len(&world.locations)
+    stats.entity_capacity = len(&world.locations.locations)
+    stats.free_list_count = len(world.free_list)
+    stats.archetype_count = len(world.archetypes)
+    stats.component_count = len(world.registry.infos)
 
-	stats.archetype_stats = make([]Archetype_Stats, len(world.archetypes), allocator)
+    stats.archetype_stats = make([]Archetype_Stats, len(world.archetypes), allocator)
 
-	for &arch, i in world.archetypes {
-		arch_mem := 0
-		for &col in arch.columns {
-			arch_mem += len(col.data)
-		}
-		arch_mem += len(arch.entities) * size_of(Entity)
+    for &arch, i in world.archetypes {
+        arch_mem := 0
+        for &col in arch.columns {
+            arch_mem += len(col.data)
+        }
+        arch_mem += len(arch.entities) * size_of(Entity)
 
-		components := make([]typeid, len(arch.layout.components), allocator)
-		for comp_id, j in arch.layout.components {
-			info, _ := registry_get_info(&world.registry, comp_id)
-			components[j] = info.type_id
-		}
+        components := make([]typeid, len(arch.layout.components), allocator)
+        for comp_id, j in arch.layout.components {
+            info, _ := registry_get_info(&world.registry, comp_id)
+            components[j] = info.type_id
+        }
 
-		stats.archetype_stats[i] = Archetype_Stats {
-			index           = arch.index,
-			entity_count    = len(arch.entities),
-			component_count = len(arch.layout.components),
-			components      = components,
-			memory_used     = arch_mem,
-		}
+        stats.archetype_stats[i] = Archetype_Stats {
+            index           = arch.index,
+            entity_count    = len(arch.entities),
+            component_count = len(arch.layout.components),
+            components      = components,
+            memory_used     = arch_mem,
+        }
 
-		stats.total_memory += arch_mem
-	}
+        stats.total_memory += arch_mem
+    }
 
-	// Add overhead from maps and dynamic arrays
-	stats.total_memory += len(world.locations.locations) * size_of(Entity_Location)
-	stats.total_memory += len(world.free_list) * size_of(Entity)
+    // Add overhead from maps and dynamic arrays
+    stats.total_memory += len(world.locations.locations) * size_of(Entity_Location)
+    stats.total_memory += len(world.free_list) * size_of(Entity)
 
-	return stats
+    return stats
 }
 
 world_stats_destroy :: proc(stats: ^World_Stats, allocator := context.allocator) {
     for &arch_stat in stats.archetype_stats {
         delete(arch_stat.components, allocator)
     }
-	delete(stats.archetype_stats, allocator)
+    delete(stats.archetype_stats, allocator)
 }
 
 // Pretty print stats

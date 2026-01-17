@@ -18,4 +18,8 @@ A        :: struct {}
 B        :: struct {}
 C        :: struct {}
 D        :: struct {}
+
+Small    :: struct { a: u8 }
+Medium   :: struct { b: i32 }
+Large    :: struct { c: f64 }
 // odinfmt: enable
