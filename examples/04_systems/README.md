@@ -41,10 +41,10 @@ for tick in 1..=100 {
 ## Running
 
 ```bash
-cd examples/03_systems
+cd examples/04_systems
 odin run .
 ```
 
 ## See Also
 
-- `examples/04_scheduler` - for a more structured approach with stages
+- `examples/05_scheduler` - for a more structured approach with stages

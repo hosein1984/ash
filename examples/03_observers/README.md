@@ -50,6 +50,6 @@ When despawning an entity:
 ## Running
 
 ```bash
-cd examples/02_observers
+cd examples/03_observers
 odin run .
 ```

@@ -116,10 +116,10 @@ Stages act as natural synchronization barriers - systems within a stage can pote
 ## Running
 
 ```bash
-cd examples/04_scheduler
+cd examples/05_scheduler
 odin run .
 ```
 
 ## See Also
 
-- `examples/03_systems` - Simpler approach without scheduler abstraction
+- `examples/04_systems` - Simpler approach without scheduler abstraction
