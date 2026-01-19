@@ -41,10 +41,11 @@ jobs:
       - name: Check examples
         run: |
           odin check examples/01_basic -vet
-          odin check examples/03_bulk -vet
+          odin check examples/02_bulk -vet
           odin check examples/03_observers -vet
           odin check examples/04_systems -vet
           odin check examples/05_scheduler -vet
+          odin check examples/07_boids -vet
           odin check examples/bench1 -vet
           odin check examples/bench2 -vet
 
